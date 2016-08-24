@@ -1,0 +1,60 @@
+/*main style sheet*/
+body{
+	background-color: #fff; 
+	height: 100%;
+	padding:0px;
+}
+
+#main_body{
+	background-color: white;
+	padding:0px;
+}
+
+#nav_bar{
+	background-color: #D3D3D3;
+	padding-top: 5px; 
+	padding-bottom: 5px;
+}
+#logo{
+	background-color: grey;
+	height: 100%; 
+}
+.nav_links{
+	
+	height: 100%;
+}
+#nav_links_medium_up{
+
+}
+
+#nav_links_small{
+	
+}
+
+#content{
+	min-height: 500px;
+	background-color: rgba(211 ,211 ,211 , 0.5);
+	margin-top: 20px;
+	margin-bottom: 20px;
+	border-radius: 10px;
+}
+
+.simpleContentContainer{
+	/*
+	simple text container
+	*/
+	padding: 10px;
+	margin-top: 20px;
+	margin-bottom: 10px;
+	background-color: rgba(211 ,211 ,211 , 0.9);
+	border-radius: 10px;
+
+}
+
+
+.breadcrumbs{
+	background-color: rgba(211 ,211 ,211 , 0);
+}
+
+
+
