@@ -32,57 +32,9 @@
 		foreach (explode("</p>",DocumentParser::parseFromFile($file_loc, $file_type)) as $val) {
 			array_push($cleanFlieTextArray, trim(preg_replace('/\s\s+/', ' ', strip_tags($val))));
 		}
-		var_dump($cleanFlieTextArray); 
+		
 		// sort tsxt data into key vallue array
-		/*
-			output
-			array (size=7)
-  'students' => 
-    array (size=5)
-      0 => 
-        array (size=5)
-          'MatNum' => string '1034567' (length=7)
-          'Surname' => string 'Banner' (length=6)
-          'Firstname' => string 'Bruce' (length=5)
-          'Course' => string 'CS' (length=2)
-          'signin' => int 0
-      1 => 
-        array (size=5)
-          'MatNum' => string '1134567' (length=7)
-          'Surname' => string 'Potts' (length=5)
-          'Firstname' => string 'Pepper' (length=6)
-          'Course' => string 'BIT' (length=3)
-          'signin' => int 0
-      2 => 
-        array (size=5)
-          'MatNum' => string '1234567' (length=7)
-          'Surname' => string 'Pym' (length=3)
-          'Firstname' => string 'Hope' (length=4)
-          'Course' => string 'CASD' (length=4)
-          'signin' => int 0
-      3 => 
-        array (size=5)
-          'MatNum' => string '1334567' (length=7)
-          'Surname' => string 'Quill' (length=5)
-          'Firstname' => string 'Petter' (length=6)
-          'Course' => string 'CS' (length=2)
-          'signin' => int 0
-      4 => 
-        array (size=5)
-          'MatNum' => string '1434567' (length=7)
-          'Surname' => string 'Bowie' (length=5)
-          'Firstname' => string 'George' (length=6)
-          'Course' => string 'CS' (length=2)
-          'signin' => int 1
-  'Department' => string 'Faculty of Design and Technology School of Computer Science and Digital Media' (length=77)
-  'Session' => string '2016-2017 Semester 1' (length=20)
-  'Module' => string 'Administrators for the win' (length=26)
-  'Module Code' => string 'CM_2024' (length=7)
-  'Lecturer' => string 'Dr Hank Pym' (length=11)
-  'Week Number' => string '1' (length=1)
-
-
-		*/
+		
 	
 		 // dev not... dont ask me how this works 
 		$sortedFileText = [];
@@ -104,13 +56,18 @@
 							$i++;
 							
 						break;
+					case 'Semester':
+						$sortedFileText['Semester'] = $cleanFlieTextArray[$i + 1];
+							$i++;
+							
+						break;
 					case 'Module':
 						$sortedFileText['Module'] = $cleanFlieTextArray[$i + 1];
 							$i++;
 							
 						break;
 					case 'Module Code':
-						$sortedFileText['Module Code'] = $cleanFlieTextArray[$i + 1];
+						$sortedFileText['Module_Code'] = $cleanFlieTextArray[$i + 1];
 							$i++;
 						break;
 					case 'Lecturer':
@@ -118,7 +75,7 @@
 							$i++;
 						break;
 					case 'Week Number':
-						$sortedFileText['Week Number'] = $cleanFlieTextArray[$i + 1];
+						$sortedFileText['Week_Number'] = $cleanFlieTextArray[$i + 1];
 						break;
 					default:
 						$skip = true;
@@ -160,31 +117,73 @@
 			$studentIndex += 1;
 			array_push($sortedFileText['students'] , $oneStudent);
 		}
-		 echo var_dump($sortedFileText);
-		// insert to db
-
-		 	// query to see if modual exists
-
-		 		// insert if it dosent
+	
 
 
+		// now uploading all to the db.
 
 
+		// find if module exist, if so get id
+		$moduleFound = false;
+		$moduleId = null;
+		$stmtCheckModuleExists = $db->prepare("SELECT module_id FROM modules WHERE module_code = ? LIMIT 1");
+		$stmtCheckModuleExists->bind_param('s', $sortedFileText['Module_Code']);
+		$stmtCheckModuleExists->execute();
+		$stmtCheckModuleExists->bind_result($currentModuleId);
+		while ($stmtCheckModuleExists->fetch()) {
+			$moduleFound = true;
+			$moduleId = $currentModuleId;
+		}
+		$stmtCheckModuleExists->close();
+		// if the module is not found insert the module
+		if(!$moduleFound){
+			$insertNewModule = $db->prepare("INSERT INTO modules (school_department_name, module_code, module_name) VALUES (?, ?, ?)");
+			$insertNewModule->bind_param("sss", $sortedFileText['Department'], $sortedFileText['Module_Code'], $sortedFileText['Module']);
+			$insertNewModule->execute();
+			$moduleId = $insertNewModule->insert_id;
+			$insertNewModule->close();
+		}
+		// upload the class information
 
-
-		// return back message
-
+		// check if class has been uploaded already
 		
+		$stmtCheckModuleExists = $db->prepare("SELECT class_id FROM class WHERE module_id_ref = ? AND semester = ? AND session = ? AND week = ?  LIMIT 1");
+		$stmtCheckModuleExists->bind_param('iisi', $moduleId, $sortedFileText['Semester'], $sortedFileText['Session'], $sortedFileText['Week_Number']);
+		$stmtCheckModuleExists->execute();
+		$stmtCheckModuleExists->bind_result($currentClassId);
+		while ($stmtCheckModuleExists->fetch()) {
+			redirect("../upload.php?message=Class has already been uploaded");
+			die();
+		}
+		$stmtCheckModuleExists->close();
+		// class dose not exist can add class
+		$classId = null;
+
+		$insertNewModule = $db->prepare("INSERT INTO class (module_id_ref, semester, lecturers, session, week) VALUES (?, ?, ?, ?, ?)");
+		$insertNewModule->bind_param("iissi", $moduleId, $sortedFileText['Semester'], $sortedFileText['Lecturer'], $sortedFileText['Session'], $sortedFileText['Week_Number']);
+		$insertNewModule->execute();
+		$classId = $insertNewModule->insert_id;
+		$insertNewModule->close();
+
+		// add students
+
+		foreach($sortedFileText['students'] as $stu){
+			$insertStudent = $db->prepare("INSERT INTO student (class_id_ref, student_number, surname, first_name, course, attend) VALUES (?, ?, ?, ?, ?, ?)");
+			$insertStudent->bind_param("issssi", $classId, $stu['MatNum'], $stu['Surname'], $stu['Firstname'], $stu['Course'], $stu['signin']);
+			$insertStudent->execute();
+			$insertStudent->close();
+		}
+		
+
+		$db->commit();
+		$db->close();
 	}else{
 		redirect("../upload.php?message=No file uploaded");
 		die();
 	}
 
+	redirect("../upload.php?message=File uploaded successfully.");
+	die();
 
-
-		
-		
-    
- 
 
 ?>	
