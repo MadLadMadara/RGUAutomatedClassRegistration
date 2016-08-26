@@ -7,13 +7,19 @@
 
   if (session_status() == PHP_SESSION_NONE)
       session_start();
+ 
+  if(!isset($_SESSION["user"]['id'])){
+    kill();
+    redirect("login.php");
+    die();
+  }
 
 
-    if(!empty($_GET["message"])){
-        $outputmessage["display"] = "block";
-        $outputmessage["message"] = $_GET["message"];
+  if(!empty($_GET["message"])){
+      $outputmessage["display"] = "block";
+      $outputmessage["message"] = $_GET["message"];
 
-    }
+  }
   
 
 ?>

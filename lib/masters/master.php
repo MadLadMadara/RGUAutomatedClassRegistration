@@ -1,8 +1,8 @@
 <?php
 
-	$Salt = "jarvas";
+	$Salt = "hNFxr60v92N6MqBo";
 
-	$Peper = "pinapple";
+	$Peper = "nC1KAd5JE3mOUdZ5";
 
 	$root = (!empty($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/'; 
 

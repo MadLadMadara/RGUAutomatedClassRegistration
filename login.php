@@ -1,3 +1,10 @@
+<?php 
+    require_once('lib/masters/master.php');
+    if(session_status() == PHP_SESSION_NONE)
+      session_start();
+    
+    kill();
+?>
 <!doctype html>
 
 <html class="no-js" lang="en">
@@ -24,8 +31,6 @@
     <link rel="stylesheet" href="css/foundation.css" />
     <link rel="stylesheet" href="css/app.css" />
 
-
-    
   </head>
 
   <body>
@@ -75,7 +80,7 @@
                 </div>
                 <div class="email-field">
                   <label>password 
-                    <input type="password" required>
+                    <input type="password" name="password" required>
                   </label>
                   <small class="error">Password must be alphanumeric.</small>
                 </div>

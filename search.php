@@ -1,3 +1,13 @@
+<?php 
+    require_once('lib/masters/master.php');
+    if(session_status() == PHP_SESSION_NONE)
+      session_start();
+    if(!isset($_SESSION["user"]['id'])){
+      kill();
+      redirect("login.php");
+    die();
+    }
+?>
 <!doctype html>
 
 <html class="no-js" lang="en">
